@@ -1,0 +1,18 @@
+{
+  "name": "barclays-statement-pdf-to-csv",
+  "version": "0.0.1",
+  "description": "Reads Barclays bank statement PDFs and converts them to CSV",
+  "main": "statement-parser.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Penrose Studio Ltd",
+  "contributors": [{
+      "name": "Jonathan Lister",
+      "email": "jonathan@penrosestudio.com"
+  }],
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "async": "~0.9.0"
+  }
+}
