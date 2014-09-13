@@ -3,6 +3,13 @@
   "version": "0.0.1",
   "description": "Reads Barclays bank statement PDFs and converts them to CSV",
   "main": "statement-parser.js",
+  "repository": {
+      "type": "git",
+      "url": "https://github.com/penrosestudio/barclays-bank-pdf-to-csv"
+  },
+  "bugs": {
+      "url": "https://github.com/penrosestudio/barclays-bank-pdf-to-csv/issues"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,6 +19,7 @@
       "email": "jonathan@penrosestudio.com"
   }],
   "license": "BSD-2-Clause",
+  "keywords": ["pdf-to-csv", "barclays"],
   "dependencies": {
     "async": "~0.9.0"
   }

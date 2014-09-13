@@ -23,3 +23,7 @@ Clone the git repository, then install dependencies:
 ## Output
 
 A single CSV file will be created called `statements.csv`.
+
+## Issues
+
+Please submit any problems as [GitHub issues](https://github.com/penrosestudio/barclays-bank-pdf-to-csv/issues) on this repository.
