@@ -46,9 +46,12 @@
       	margin: 1em 0;
       	border: 1px solid #999;
       }
+      #the-canvas {
+        border: 1px solid black;
+      }
     </style>
-    <script src="./pdf.combined.js"></script>
-    <script src="./statement-parser-lib.js"></script>
+    <script src="pdf.combined.js"></script>
+    <script src="statement-parser-lib.js"></script>
   </head>
   <body>
     <form id="upload" action="" method="POST" enctype="multipart/form-data">
@@ -63,7 +66,7 @@
       <p>Status Messages</p>
     </div>
     <h2>Cover sheet of your bank statement will appear here</h2>
-    <canvas id="the-canvas" style="border:1px solid black;"/>
+    <canvas id="the-canvas" />
     <script src="browser-parser.js"></script>
   </body>
 </html>

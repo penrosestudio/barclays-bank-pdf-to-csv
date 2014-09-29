@@ -14,11 +14,15 @@ Clone the git repository, then install dependencies:
     git clone https://github.com/penrosestudio/barclays-bank-pdf-to-csv.git
     npm install
 
-## Usage
+## Usage under Node.js
 
     node statement-parser <folder>
-    
+
 `<folder>` should be a directory containing Barclays Bank statement PDFs.
+
+## Usage in a browser
+
+Open index.html in a browser and drop a PDF onto the drop-zone.
 
 ## Output
 
