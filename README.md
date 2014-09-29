@@ -7,6 +7,8 @@ Tested against 18 months' worth of bank statements exported in September 2014.
 
 Built on [Mozilla PDF.JS](http://mozilla.github.io/pdf.js/), which is marvellous.
 
+In-browser version online at: http://penrosestudio.com/barclays-bank-pdf-to-csv/
+
 ## Installation
 
 Clone the git repository, then install dependencies:
