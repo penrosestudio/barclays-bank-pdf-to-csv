@@ -1,6 +1,8 @@
 Barclays Bank statement PDF-to-CSV
 ==================================
 
+NB: This only works with Business account statements! Support for personal account statements is planned, pending getting hold of an appropriate PDF.
+
 Reads Barclays Bank statements and extracts transactions. Validates transactions against the total payments and receipts shown in the top-right of the bank statement.
 
 Tested against 18 months' worth of bank statements exported in September 2014.
