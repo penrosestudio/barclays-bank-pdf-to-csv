@@ -1,0 +1,87 @@
+"1 Mar"								dir":"ltr"		width":22.788,				"height":9,		"transform":[9,0,0,9,58.05,234.10000000000002],		"fontName":"C0EX07S0"}
+"Interest earned, £1.82 gross"		dir":"ltr"		width":107.892,				"height":9,		"transform":[9,0,0,9,110.6,234.10000000000002],		"fontName":"C0EX07S0"}
+"£0.36 tax has been deducted"		dir":"ltr"		width":111.779,				"height":9,		"transform":[9,0,0,9,110.6,222.60000000000002],		"fontName":"C0EX07S0"}
+"For the period 1 Feb to 28 Feb"	dir":"ltr"		width":115.776,				"height":9,		"transform":[9,0,0,9,110.6,211.04999999999995],		"fontName":"C0EX07S0"}
+"1.46"								dir":"ltr"		width":16.956,				"height":9,		"transform":[9,0,0,9,342.2,234.10000000000002],		"fontName":"C0EX07S0"}
+"919.97"							dir":"ltr"		width":26.892,				"height":9,		"transform":[9,0,0,9,384.7,234.10000000000002],		"fontName":"C0EX07S0"}
+"  "								dir":"ltr"		width":3.84,				"height":8,		"transform":[8,0,0,8,433.4,233.85000000000002],		"fontName":"C0EX07S0"}
+"2 Apr"								dir":"ltr"		width":21.276,				"height":9,		"transform":[9,0,0,9,58.05,193.79999999999995],		"fontName":"C0EX07S0"}
+"Interest earned, £0.48 gross"		dir":"ltr"		width":107.892,				"height":9,		"transform":[9,0,0,9,110.6,193.79999999999995],		"fontName":"C0EX07S0"}
+"£0.09 tax has been deducted"		dir":"ltr"		width":111.779,				"height":9,		"transform":[9,0,0,9,110.6,182.25],					"fontName":"C0EX07S0"}
+"For the period 1 Mar to 1 Apr"		dir":"ltr"		width":112.752,				"height":9,		"transform":[9,0,0,9,110.6,170.75],					"fontName":"C0EX07S0"}
+"0.39"								dir":"ltr"		width":16.956,				"height":9,		"transform":[9,0,0,9,342.2,193.79999999999995],		"fontName":"C0EX07S0"}
+"920.36"							dir":"ltr"		width":26.892,				"height":9,		"transform":[9,0,0,9,384.7,193.79999999999995],		"fontName":"C0EX07S0"}
+"  "								dir":"ltr"		width":3.84,				"height":8,		"transform":[8,0,0,8,433.4,193.54999999999995],		"fontName":"C0EX07S0"}
+"25 Apr"							dir":"ltr"		width":26.244,				"height":9,		"transform":[9,0,0,9,58.05,153.45000000000005],		"fontName":"C0EX07S0"}
+
+
+We can infer the presence of a table using the coordinates of each string.
+
+A y offset (234.10...) is repeated for 4 strings. A second y offset (193.79...) is repeated for 4 strings. 
+So there are several cases of strings in rows.
+
+Note the x offsets of the strings in a row in the first set: 58.05, 110.6, 342.2, 384.7. They are identical to the y offsets of the strings in the second row set.
+So these rows of strings are also in columns.
+
+Strings in both rows and columns: table.
+
+We need to be careful about missing cells, which might not show up as a string.
+
+We could find the first such row and use its cells to name column headers.
+
+ASSUMPTIONS
+===========
+1. A table is a set of intersecting rows and columns.
+2. A row is a set of at least two strings with equal y offset.
+3. A column is a set of at least strings with equal x offset.
+4. Strings that are in the same row or column are peers.
+
+Therefore:
+4. Where we find >2 strings with equal y offset, there is a row.
+5. Where we find >2 strings with equal x offset, there is a column.
+
+And:
+6. Where a string is in a row and a column, that row and column are in the table, as are the rows and columns of any of that string's peers.
+
+PROCESS
+=======
+1. Map this array of strings into an array of objects: {string, x, y} (or uniquely identify them)
+2. Add table contents:
+	- For each item in array of strings/coordinate objects.
+		- If it is a peer of any item in any table, add it to that table.
+		- Else add to a new table.
+3. Strip out false positives by finding column headings:
+
+> But will we have a problem with offsets if strings do not line up exactly? If they're differently justified they won't have the same offset.
+
+
+TARGET
+======
+The table: a 2-dimensional array of strings (or string objects):
+[
+	[a, b, c],
+	[d, null, e],
+	[null, f, g],
+	[]
+]
+
+or:
+{
+	rows: [
+		11.3,
+		14.9,
+		20.1
+	],
+	columns: [
+		55.1,
+		60.9,
+		79.1
+	]
+}
+
+(Then combine with other tables from different pages / documents)
+
+
+
+All Y offsets
+All X offsets

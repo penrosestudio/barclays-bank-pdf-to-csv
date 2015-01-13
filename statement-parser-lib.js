@@ -105,10 +105,215 @@
           console.info('Size: ' + viewport.width + 'x' + viewport.height);
           console.info();
           return page.getTextContent().then(function (content) {
+
+            // CHRIS EXPERIMENT
+            'use strict'
+            // TODOS
+            // 2. Put line-break strings into the same cell
+            // 3. Turn the output of the table array into an actual table (2d array), maybe export as CSV.
+            // 5. Combine matching tables (over page breaks) (as an option. Matching up tables by column headings)
+            // 6. Check on other formats with different column justification
+            var snippets = content.items.map(function(item){
+              return {
+                str: item.str,
+                x: item.transform[4],
+                y: item.transform[5],
+                right: item.transform[4] + item.width
+              };
+            });
+            var tables = [];
+            function findMatchingTables(snippet) {
+              var matchingTableIndices = [];
+              tables.forEach(function(table, index){
+                var matchingTable = table.some(function(item){
+                  return (item.x === snippet.x || item.y === snippet.y);
+                });
+                if (matchingTable) {
+                  matchingTableIndices.push(index);
+                }
+              });
+              return matchingTableIndices;
+            }
+            snippets.forEach(function(snippet){
+              var matchingTableIndices = findMatchingTables(snippet);
+
+              if (matchingTableIndices.length === 2) {
+              // Combine tables if two match
+                tables[matchingTableIndices[0]] = tables[matchingTableIndices[0]].concat(tables[matchingTableIndices[1]]);
+                tables[matchingTableIndices[0]].push(snippet);
+                tables.splice(matchingTableIndices[1],1);
+              } else if (matchingTableIndices.length === 1) {
+                tables[matchingTableIndices[0]].push(snippet);
+              } else {
+                var newTable = [snippet];
+                tables.push(newTable);
+              }
+
+            });
+
+            // Filter out tables without both >1 row and >1 column (not real tables, just lines)
+            function isTwoDimensional(table) {
+              var xs = [],
+                ys = [],
+                rows = [], 
+                columns = [];
+
+              return table.some(function(item){
+                if (xs.indexOf(item.x) === -1) {
+                  xs.push(item.x);
+                } else if (columns.indexOf(item.x) === -1) { 
+                  columns.push(item.x);
+                }
+                if (ys.indexOf(item.y) === -1) {
+                  ys.push(item.y);
+                } else if (rows.indexOf(item.y) === -1) { 
+                  rows.push(item.y);
+                }
+                if (rows.length > 1 && columns.length > 1) {
+                  return true;
+                }
+              });
+            }
+            tables = tables.filter(isTwoDimensional);
+
+            function closeEnough(a, b){
+              var tolerance = 3;
+              return (Math.abs(a - b) < tolerance);
+            }
+
+            function toTwoDimensionalArrays(table) {
+              var rows = [],
+                columns = [];
+              table.forEach(function(item){
+                // We mark columns as e.g. '124.3/583.88' so we can match either left or right with cells
+                var cellIsInNewColumn = true;
+                columns.forEach(function(col){
+                  var leftBit = parseFloat(col.split('/')[0]),
+                    rightBit = parseFloat(col.split('/')[1]);
+                  if (closeEnough(item.x, leftBit) || closeEnough(item.right, rightBit)) { //TODO: fn for non-exact matches
+                    cellIsInNewColumn = false;
+                  }
+                });
+                if (cellIsInNewColumn) {
+                  var column = item.x + '/' + item.right;
+                  columns.push(column);
+                }
+                if (rows.indexOf(item.y) === -1) {
+                  rows.push(item.y);
+                }
+              });
+
+              // Make coordinate table object so that empty cells are still represented
+              var tableObject = {};
+              rows.forEach(function(row){
+                tableObject[row] = {};
+                columns.forEach(function(column){
+                  tableObject[row][column] = undefined;
+                });
+              });
+
+              
+              // Add strings to coordinate table object
+              /*
+              {
+                23.6: {
+                  17.6: 'hello',
+                  21.9: 'there',
+                  29.6: undefined,
+                  38.1: 'balance'
+                },
+                48.8: {
+                  17.6: 'money in',
+                  29.6: 'money out'
+                }
+              }
+              */
+              table.forEach(function(item){
+                var row = item.y;
+                var column = columns.filter(function(col){
+                  var match = (closeEnough(item.x, parseFloat(col.split('/')[0])) || closeEnough(item.right, parseFloat(col.split('/')[1])));
+                  return match;
+                })[0];
+                tableObject[item.y][column] = item.str;
+              });
+
+              var tableArray = Object.keys(tableObject)
+                                      .map(parseFloat)
+                                      .sort(function(a,b){ return (a < b ? -1 : 1); })
+                                      .reverse()
+                                      .map(function(key){
+                                        return Object.keys(tableObject[key])
+                                                     .sort(function(a,b){
+                                                        // Just compare lefts
+                                                        var first = parseFloat(a.split('/')[0]),
+                                                          second = parseFloat(b.split('/')[0]);
+                                                        return (first < second ? -1 : 1); 
+                                                      })
+                                                     .map(function(key2){
+                                                        return tableObject[key][key2];
+                                                      });
+                                      });
+              return tableArray;
+            }
+
+            // Combine cells into row above if they are alone on a row (assume line break)
+            function appendLoneCellsToCellAbove(tableArray) {
+              for (var i = tableArray.length - 1; i >= 1; i--) {
+                var row = tableArray[i];
+                var nonEmptyCells = [];
+                row.forEach(function(item, index){
+                  if (typeof item !== 'undefined') {
+                    nonEmptyCells.push(index);
+                  }
+                });
+                if (nonEmptyCells.length === 1) {
+                  tableArray[i-1][nonEmptyCells[0]] += row[nonEmptyCells[0]];
+                  tableArray.splice(i,1); // delete the row
+                }
+              }
+              return tableArray;
+            }
+
+            // If columns don't collide, merge them.
+            function nudgeColumnsUnderHeadings(table) {
+              // Loop backwards so we can remove columns without affecting loop
+              for (var j = table[0].length - 1; j >= 1; j--) {
+
+                // Check if we can to combine j-1 and j
+                var mergeColumns = true;
+                for (var i = 0; i < table.length; i++) {
+                  if (table[i][j] && table[i][j-1]) {
+                    mergeColumns = false;
+                  }
+                }
+
+                // If so, combine them
+                if (mergeColumns) {
+                  for (var i = 0; i < table.length; i++) {
+                    table[i][j-1] = table[i][j] || table[i][j-1];
+                    table[i].splice(j, 1);
+                  }
+                }
+              }
+              return table;
+            }
+
+            tables = tables.map(toTwoDimensionalArrays);
+            tables = tables.map(appendLoneCellsToCellAbove);
+            tables = tables.map(nudgeColumnsUnderHeadings);
+
+            // Log out
+            console.log('--------');
+            console.log("TABLES");
+            console.log(JSON.stringify(tables));
+            console.log('--------');
+            // END OF EXPERIMENT
+            return;
+
             // Content contains lots of information about the text layout and
             // styles, but we need only strings at the moment
             var strings = content.items.map(function (item, i) {
-              //console.info(JSON.stringify(item));
+              console.log(JSON.stringify(item));
               // add an appropriate whitespace character here if the next item is on the same line and more than 5px to the right, or is on the next line
               // item.transform[4] is the x coordinate
               // item.transform[5] is the y coordinate
@@ -129,9 +334,9 @@
               }
               return item.str+padding;
             });
-            console.info('## Text Content');
+            // console.log('## Text Content');
             var text = strings.join('');
-            console.info(text);
+            // console.log(text);
             processStatement(text, pageNum);
             console.info('# Transactions analysed');
           }).then(function () {

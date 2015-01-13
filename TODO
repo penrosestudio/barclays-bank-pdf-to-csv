@@ -1,0 +1,5 @@
+- If:
+	(i) there is an empty cell in the header row
+	(ii) that row's column does not collide with an adjacent header's column
+   Then they shall be collapsed into one column.
+   > And if there are TWO??? That would be unfortunate. It'll have to be done across all empty header cells at once to determine the strategy.
