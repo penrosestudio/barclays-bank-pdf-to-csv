@@ -16,8 +16,8 @@
     global.window = global;
     global.navigator = { userAgent: "node" };
     global.PDFJS = {};
-    global.DOMParser = require('./domparsermock.js').DOMParserMock;
-
+    require('./domstubs.js');
+    PDFJS.workerSrc = true;
     require('./pdf.combined.js');
 
     var debugMode = process.argv[3] === '--debug';
@@ -129,9 +129,9 @@
               }
               return item.str+padding;
             });
-            console.info('## Text Content');
+            console.log('## Text Content');
             var text = strings.join('');
-            console.info(text);
+            console.log(text);
             processStatement(text, pageNum);
             console.info('# Transactions analysed');
           }).then(function () {
