@@ -107,7 +107,7 @@
           return page.getTextContent().then(function (content) {
 
             // CHRIS EXPERIMENT
-            'use strict'
+            'use strict';
             // TODOS
             // 2. Put line-break strings into the same cell
             // 3. Turn the output of the table array into an actual table (2d array), maybe export as CSV.
@@ -121,6 +121,45 @@
                 right: item.transform[4] + item.width
               };
             });
+            
+            
+            var condensedSnippets = [],
+              currentCondensedSnippet;
+            
+            // go through snippets and combine snippets that are close to each other into single snippets
+            snippets.forEach(function (snippet, i) {
+              var isFarAway,
+                  isOnSameLine;
+              if(!currentCondensedSnippet) {
+                // if there is no currentCondensedSnippet set, use the current snippet
+                console.log('new snippet',snippet.str);
+                currentCondensedSnippet = snippet;
+              } else {
+                // the snippet is a candidate for adding to currentCondensedSnippet
+                // or becoming the new currentCondensedSnippet
+                isOnSameLine = currentCondensedSnippet.y === snippet.y;
+                isFarAway = snippet.x - currentCondensedSnippet.right > 5; // snippet is more than 5px to the right
+                // if not on same line or far away, save currentCondensedSnippet and set snippet to currentCondensedSnippet
+                if(!isOnSameLine || isFarAway) {
+                  condensedSnippets.push(currentCondensedSnippet);
+                  currentCondensedSnippet = snippet;
+                } else { // snippet is close and on the same line, combine with currentCondensedSnippet
+                  console.log('combining',snippet.str,currentCondensedSnippet.str);
+                  currentCondensedSnippet.str += snippet.str;
+                  currentCondensedSnippet.right = snippet.right;
+                }
+              }
+            });
+            // push the final currentCondensedSnippet into condensedSnippets
+            condensedSnippets.push(currentCondensedSnippet);
+            
+            // write over snippets
+            snippets = condensedSnippets;
+            
+            if(pageNum===6) {
+              //console.log(JSON.stringify(snippets, null, 2));  
+            }
+            
             var tables = [];
             function findMatchingTables(snippet) {
               var matchingTableIndices = [];
@@ -150,6 +189,11 @@
               }
 
             });
+            
+            //if(pageNum===6) {
+              //console.log('tables');
+              //console.log(JSON.stringify(tables, null, 2));  
+            //}
 
             // Filter out tables without both >1 row and >1 column (not real tables, just lines)
             function isTwoDimensional(table) {
@@ -280,8 +324,9 @@
               for (var j = table[0].length - 1; j >= 1; j--) {
 
                 // Check if we can to combine j-1 and j
-                var mergeColumns = true;
-                for (var i = 0; i < table.length; i++) {
+                var mergeColumns = true,
+                  i;
+                for (i = 0; i < table.length; i++) {
                   if (table[i][j] && table[i][j-1]) {
                     mergeColumns = false;
                   }
@@ -289,7 +334,7 @@
 
                 // If so, combine them
                 if (mergeColumns) {
-                  for (var i = 0; i < table.length; i++) {
+                  for (i = 0; i < table.length; i++) {
                     table[i][j-1] = table[i][j] || table[i][j-1];
                     table[i].splice(j, 1);
                   }
@@ -299,13 +344,13 @@
             }
 
             tables = tables.map(toTwoDimensionalArrays);
-            tables = tables.map(appendLoneCellsToCellAbove);
+            //tables = tables.map(appendLoneCellsToCellAbove);
             tables = tables.map(nudgeColumnsUnderHeadings);
 
             // Log out
             console.log('--------');
             console.log("TABLES");
-            console.log(JSON.stringify(tables));
+            console.log(JSON.stringify(tables,null,2));
             console.log('--------');
             // END OF EXPERIMENT
             return;
