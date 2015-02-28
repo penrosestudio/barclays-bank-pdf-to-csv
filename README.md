@@ -28,6 +28,14 @@ Clone the git repository, then install dependencies:
 
 Open index.html in a browser and drop a PDF onto the drop-zone.
 
+Browsers tested and compatible:
+* Mac OS X 10.9.5:
+  * Chrome 40.0
+  * Safari 7.0.6
+  * Firefox 35.0.1
+* Windows 7:
+  * Firefox 36.0
+
 ## Output
 
 A single CSV file will be created called `statements.csv`.
