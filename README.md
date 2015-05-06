@@ -7,6 +7,12 @@ Reads Barclays Bank statements and extracts transactions. Validates transactions
 
 Tested against 18 months' worth of bank statements exported in September 2014.
 
+[UPDATE: April 2015]
+The statement format was updated in December 2014.
+Therefore the updated app has only been tested on four months of statements.
+You should check every statement you convert. There may be some transaction types that have not been encountered, and need to be added, and some possible varients on the layout that are not taken account of.
+If you find an entry that is not picked up by the application, please open an issue on Github with the text of the entry description only. Do not share your unedited bank statements with anyone for obvious security reasons.
+
 Built on [Mozilla PDF.JS](http://mozilla.github.io/pdf.js/), which is marvellous.
 
 In-browser version online at: http://penrosestudio.com/barclays-bank-pdf-to-csv/
