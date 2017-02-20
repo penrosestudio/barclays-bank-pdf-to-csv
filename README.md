@@ -1,7 +1,9 @@
 Barclays Bank statement PDF-to-CSV
 ==================================
 
-NB: This only works with Business account statements! Support for personal account statements is planned, pending getting hold of an appropriate PDF.
+*This project is not actively maintained by @jayfresh any more. Please feel free to take it on if you like it! It looks like Barclays have released bank feeds now, so that's also worth a look: https://help.xero.com/uk/BarclaysFeed*
+
+NB: This only works with Business account statements! Support for personal account statements would need some work.
 
 Reads Barclays Bank statements and extracts transactions. Validates transactions against the total payments and receipts shown in the top-right of the bank statement.
 
