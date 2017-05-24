@@ -203,14 +203,29 @@
   var amountMarker = '\t[\\d,]+\\.\\d\\d';
   var trailingBalanceMarker = '(?:[\\d,]+\\.\\d\\d)?'; // some transactions are followed by balances that can interfere a subsequent date e.g. 'Direct credit from G Kirschner Ref:-KirschnerBooking306.004,109.18' followed by '7 FebDebit card payment...'
   var transactionSeparator = new RegExp(optionalDateMarker+'(('+paymentsMarkers+'|'+receiptsMarkers+').+?)('+amountMarker+')'+trailingBalanceMarker,'gi');
-  var totalsMarker = new RegExp('Total payments - incl\\.\\\\ncommission & interest('+amountMarker+').+?Total receipts('+amountMarker+')');
+  var totalsMarkers = [
+    // old format
+    new RegExp('Total payments - incl\\.\\\\ncommission & interest('+amountMarker+').+?Total receipts('+amountMarker+')'),
+    // new format
+    /Money out\s*?£([\d,]+\.\d\d).+?Money in\s*?£([\d,]+\.\d\d)/
+  ];
   //console.info('transaction separator',transactionSeparator);
 
   function processStatement(text, pageNum) {
 
-    // get totals if this is page 1
+    // get old format totals if this is page 1
+    var totals;
     if(pageNum===1) {
-      var totals = text.match(totalsMarker);
+      totals = text.match(totalsMarkers[0]);
+      if(totals) {
+        // convert strings such as '10,271.17' to 10271.17
+        totalPaymentsFromStatement = -parseFloat(totals[1].replace(',','')).toFixed(2);
+        totalReceiptsFromStatement = parseFloat(totals[2].replace(',','')).toFixed(2);
+      }
+    }
+    // get new format totals if this is page 2
+    if(pageNum===2 && !totals) {
+      totals = text.match(totalsMarkers[1]);
       if(totals) {
         // convert strings such as '10,271.17' to 10271.17
         totalPaymentsFromStatement = -parseFloat(totals[1].replace(',','')).toFixed(2);
