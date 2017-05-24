@@ -163,16 +163,18 @@
   } // end of processPDFStatment()
 
   var payments = [
+    "AFTS payment re",
+    "Cash machine withdrawal",
+    "Card Payment",
+    "CHAPS transfer to",
+    "Cheque issued",
+    "Commission charges",
+    "Credit Payment",
     "Debit card payment to",
     "Direct debit to",
-    "Card Payment",
-    "Credit Payment",
     "Internet Banking transfer to",
     "On-line Banking bill payment to",
-    "Commission charges",
-    "Standing order to",
-    "Cash machine withdrawal",
-    "Cheque issued"
+    "Standing order to"
   ];
   var receipts = [
     "Direct credit from",
@@ -184,10 +186,10 @@
   ];
 
   var transactionsStart = [
-                            'Transactions in date order\\nDate\tDescription\tPayments\tReceipts\tBalance',//Old statement format
-                            'Your Business Current Account',
-                            'Continued\\n'
-                          ];
+    'Transactions in date order\\nDate\tDescription\tPayments\tReceipts\tBalance', //Old statement format
+    'Your Business Current Account',
+    'Continued\\n'
+  ];
   /*
   transaction ending patterns are:
   * Interim balance carried forward3,856.88 - used on first page when a day's transaction spill over to the second page
@@ -226,7 +228,7 @@
       if(loopStartIndex > -1){
         startIndex = loopStartIndex;
       }
-    };
+    }
     if(typeof startIndex === 'undefined'){
       startIndex = -1;
     }
