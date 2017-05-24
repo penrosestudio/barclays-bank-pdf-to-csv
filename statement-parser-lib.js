@@ -215,17 +215,18 @@
   var paymentsMarkers = payments.join('|');
   var receiptsMarkers = receipts.join('|');
   var optionalDateMarker = '(?:(\\d{1,2} [a-zA-z]{3})\t)?'; // some transactions are preceded by dates such as '7 Feb' or '21 Jul'
-  var amountMarker = '\t[\\d,]+\\.\\d\\d';
+  var amountMarker = '\t£?([\\d,]+\\.\\d\\d)';
   var trailingBalanceMarker = '(?:[\\d,]+\\.\\d\\d)?'; // some transactions are followed by balances that can interfere a subsequent date e.g. 'Direct credit from G Kirschner Ref:-KirschnerBooking306.004,109.18' followed by '7 FebDebit card payment...'
   var transactionSeparator = new RegExp(optionalDateMarker + '((' +
-    paymentsMarkers + '|' + receiptsMarkers + ').+?)(' + amountMarker + ')' +
+    paymentsMarkers + '|' + receiptsMarkers + ').+?)' + amountMarker +
     trailingBalanceMarker,'gi');
   var totalsMarkers = [
     // old format
-    new RegExp('Total payments - incl\\.\\\\ncommission & interest(' +
-      amountMarker + ').+?Total receipts(' + amountMarker + ')'),
+    new RegExp('Total payments - incl\\.\\\\ncommission & interest' +
+      amountMarker + '.+?Total receipts' + amountMarker),
     // new format
-    /Money out\s*?£([\d,]+\.\d\d).+?Money in\s*?£([\d,]+\.\d\d)/
+    new RegExp('Money out\\s*?' + amountMarker +
+      '.+?Money in\\s*?' + amountMarker)
   ];
   // console.info('transaction separator',transactionSeparator);
 
