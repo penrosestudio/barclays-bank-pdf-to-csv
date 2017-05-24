@@ -166,20 +166,28 @@
     "Debit card payment to",
     "Direct debit to",
     "Card Payment",
+    "Credit Payment",
     "Internet Banking transfer to",
     "On-line Banking bill payment to",
     "Commission charges",
     "Standing order to",
-    "Cash machine withdrawal"
+    "Cash machine withdrawal",
+    "Cheque issued"
   ];
   var receipts = [
     "Direct credit from",
     "Debit card refund from",
     "Internet Banking transfer from",
     "Deposit", // NB: not sure this is a generic reference
-    "Refund from"
+    "Refund from",
+    "Business Banking Loyalty Reward"
   ];
-  var transactionsStart = 'Transactions in date order\\nDate\tDescription\tPayments\tReceipts\tBalance';
+
+  var transactionsStart = [
+                            'Transactions in date order\\nDate\tDescription\tPayments\tReceipts\tBalance',//Old statement format
+                            'Your Business Current Account',
+                            'Continued\\n'
+                          ];
   /*
   transaction ending patterns are:
   * Interim balance carried forward3,856.88 - used on first page when a day's transaction spill over to the second page
@@ -192,7 +200,7 @@
   var optionalDateMarker = '(?:(\\d{1,2} [a-zA-z]{3})\t)?'; // some transactions are preceded by dates such as '7 Feb' or '21 Jul'
   var amountMarker = '\t[\\d,]+\\.\\d\\d';
   var trailingBalanceMarker = '(?:[\\d,]+\\.\\d\\d)?'; // some transactions are followed by balances that can interfere a subsequent date e.g. 'Direct credit from G Kirschner Ref:-KirschnerBooking306.004,109.18' followed by '7 FebDebit card payment...'
-  var transactionSeparator = new RegExp(optionalDateMarker+'(('+paymentsMarkers+'|'+receiptsMarkers+').+?)('+amountMarker+')'+trailingBalanceMarker,'g');
+  var transactionSeparator = new RegExp(optionalDateMarker+'(('+paymentsMarkers+'|'+receiptsMarkers+').+?)('+amountMarker+')'+trailingBalanceMarker,'gi');
   var totalsMarker = new RegExp('Total payments - incl\\.\\\\ncommission & interest('+amountMarker+').+?Total receipts('+amountMarker+')');
   //console.info('transaction separator',transactionSeparator);
 
@@ -208,9 +216,21 @@
       }
     }
     // extract statement lines
-    var startIndex = text.indexOf(transactionsStart),
+    var startIndex,
+        loopStartIndex,
         //endIndex = text.search(transactionsEnd),
         matches;
+    for (var i = transactionsStart.length - 1; i >= 0; i--) {
+      loopStartIndex = text.indexOf(transactionsStart[i]);
+
+      if(loopStartIndex > -1){
+        startIndex = loopStartIndex;
+      }
+    };
+    if(typeof startIndex === 'undefined'){
+      startIndex = -1;
+    }
+
     //if(endIndex===-1 || startIndex===-1) {
     if(startIndex===-1) {
       console.warn('could not find start of transactions in text, skipping page '+pageNum);
