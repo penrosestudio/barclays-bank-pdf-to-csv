@@ -6,22 +6,24 @@
 
 (function() {
 
-  var isBrowser = typeof window!=='undefined';
+  var isBrowser = typeof window !== 'undefined';
 
   // if not in a browser
   // few hacks to let PDF.js be loaded not as a module in global space
-  if(!isBrowser) {
+  if (!isBrowser) {
     var fs = require('fs');
 
     global.window = global;
-    global.navigator = { userAgent: "node" };
+    global.navigator = {
+      userAgent: 'node'
+    };
     global.PDFJS = {};
     require('./domstubs.js');
     PDFJS.workerSrc = true;
     require('./pdf.combined.js');
 
     var debugMode = process.argv[3] === '--debug';
-    if(!debugMode) {
+    if (!debugMode) {
       console.info = function() {
         // do nothing
       };
@@ -29,13 +31,13 @@
   }
 
   // NB: we'd have to move these inside function scope if we wanted this file to provide a method that could be run multiple times in parallel
-  var totalPaymentsFromStatement,
-      totalPaymentsFromTransactions,
-      totalReceiptsFromStatement,
-      totalReceiptsFromTransactions,
-      transactions,
-      currentTransactionDate,
-      statementYear;
+  var totalPaymentsFromStatement;
+  var totalPaymentsFromTransactions;
+  var totalReceiptsFromStatement;
+  var totalReceiptsFromTransactions;
+  var transactions;
+  var currentTransactionDate;
+  var statementYear;
 
   /*
    * Parse a PDF data stream for statement data
@@ -53,14 +55,17 @@
 
     // get the statement year from the filename
     var statementFileNameDelimiter = 'Statement_'; // e.g. Statement_20140807.pdf
-    statementYear = fileName.substr(fileName.lastIndexOf(statementFileNameDelimiter)+statementFileNameDelimiter.length,4);
+    statementYear = fileName.substr(
+      fileName.lastIndexOf(statementFileNameDelimiter) +
+      statementFileNameDelimiter.length,
+    4);
 
     // Will be using promises to load document, pages and misc data instead of
     // callback.
-    PDFJS.getDocument(data).then(function (doc) {
+    PDFJS.getDocument(data).then(function(doc) {
 
       // load preview of the PDF in the canvas if present
-      if(isBrowser) {
+      if (isBrowser) {
         doc.getPage(1).then(function(page) {
           var scale = 1.5;
           var viewport = page.getViewport(scale);
@@ -86,7 +91,7 @@
       console.info();
 
       var lastPromise; // will be used to chain promises
-      lastPromise = doc.getMetadata().then(function (data) {
+      lastPromise = doc.getMetadata().then(function(data) {
         console.info('# Metadata Is Loaded');
         console.info('## Info');
         console.info(JSON.stringify(data.info, null, 2));
@@ -98,43 +103,44 @@
         }
       });
 
-      var loadPage = function (pageNum) {
-        return doc.getPage(pageNum).then(function (page) {
+      var loadPage = function(pageNum) {
+        return doc.getPage(pageNum).then(function(page) {
           console.info('# Page ' + pageNum);
           var viewport = page.getViewport(1.0 /* scale */);
           console.info('Size: ' + viewport.width + 'x' + viewport.height);
           console.info();
-          return page.getTextContent().then(function (content) {
+          return page.getTextContent().then(function(content) {
             // Content contains lots of information about the text layout and
             // styles, but we need only strings at the moment
-            var strings = content.items.map(function (item, i) {
+            var strings = content.items.map(function(item, i) {
               //console.info(JSON.stringify(item));
               // add an appropriate whitespace character here if the next item is on the same line and more than 5px to the right, or is on the next line
               // item.transform[4] is the x coordinate
               // item.transform[5] is the y coordinate
-              var nextItem = content.items[i+1],
-                  padding = '',
-                  isFarAway,
-                  isOnSameLine;
-              if(nextItem) {
+              var nextItem = content.items[i+1];
+              var padding = '';
+              var isFarAway;
+              var isOnSameLine;
+              if (nextItem) {
                 isOnSameLine = nextItem.transform[5] === item.transform[5]; // transform[5] is y coordinate
-                isFarAway = nextItem.transform[4] - (item.transform[4] + item.width) > 5; // transform[4] is x coordinate
+                isFarAway = nextItem.transform[4] -
+                  (item.transform[4] + item.width) > 5; // transform[4] is x coordinate
                 //console.info('distance to next item', nextItem.transform[4] - item.transform[4],item.str,nextItem.str);
-                if(!isOnSameLine) {
+                if (!isOnSameLine) {
                   padding = '\\n';
                 }
-                if(isFarAway) {
+                if (isFarAway) {
                   padding = '\t';
                 }
               }
-              return item.str+padding;
+              return item.str + padding;
             });
             console.log('## Text Content');
             var text = strings.join('');
             console.log(text);
             processStatement(text, pageNum);
             console.info('# Transactions analysed');
-          }).then(function () {
+          }).then(function() {
             console.info();
           });
         });
@@ -145,17 +151,26 @@
         lastPromise = lastPromise.then(loadPage.bind(null, i));
       }
       return lastPromise;
-    }).then(function () {
+    }).then(function() {
       console.info('# End of Document');
-      var transactionsList = transactions.map(function(transaction) { return transaction.date+'\t'+transaction.description+'\t'+transaction.amount; }).join('\n');
+      var transactionsList = transactions.map(function(transaction) {
+        return transaction.date + '\t' + transaction.description + '\t' +
+        transaction.amount;
+      }).join('\n');
       console.info(transactionsList);
-      console.log('Totals from statement: payments '+totalPaymentsFromStatement+', receipts '+totalReceiptsFromStatement);
-      console.log('Totals from transactions: payments '+totalPaymentsFromTransactions.toFixed(2)+', receipts '+totalReceiptsFromTransactions.toFixed(2));
-      var errorsInPayments = (totalPaymentsFromTransactions-totalPaymentsFromStatement).toFixed(2),
-        errorsInReceipts = (totalReceiptsFromTransactions-totalReceiptsFromStatement).toFixed(2);
-      console.warn('Errors: payments '+errorsInPayments+', receipts '+errorsInReceipts);
+      console.log('Totals from statement: payments ' +
+        totalPaymentsFromStatement + ', receipts ' + totalReceiptsFromStatement);
+      console.log('Totals from transactions: payments ' +
+        totalPaymentsFromTransactions.toFixed(2) + ', receipts ' +
+        totalReceiptsFromTransactions.toFixed(2));
+      var errorsInPayments = (totalPaymentsFromTransactions -
+        totalPaymentsFromStatement).toFixed(2);
+      var errorsInReceipts = (totalReceiptsFromTransactions -
+        totalReceiptsFromStatement).toFixed(2);
+      console.warn('Errors: payments ' + errorsInPayments +
+        ', receipts ' + errorsInReceipts);
       callback(null, transactions);
-    }, function (err) {
+    }, function(err) {
       console.error('Error: ' + err);
       callback(err);
     });
@@ -163,26 +178,26 @@
   } // end of processPDFStatment()
 
   var payments = [
-    "AFTS payment re",
-    "Cash machine withdrawal",
-    "Card Payment",
-    "CHAPS transfer to",
-    "Cheque issued",
-    "Commission charges",
-    "Credit Payment",
-    "Debit card payment to",
-    "Direct debit to",
-    "Internet Banking transfer to",
-    "On-line Banking bill payment to",
-    "Standing order to"
+    'AFTS payment re',
+    'Cash machine withdrawal',
+    'Card Payment',
+    'CHAPS transfer to',
+    'Cheque issued',
+    'Commission charges',
+    'Credit Payment',
+    'Debit card payment to',
+    'Direct debit to',
+    'Internet Banking transfer to',
+    'On-line Banking bill payment to',
+    'Standing order to'
   ];
   var receipts = [
-    "Direct credit from",
-    "Debit card refund from",
-    "Internet Banking transfer from",
-    "Deposit", // NB: not sure this is a generic reference
-    "Refund from",
-    "Business Banking Loyalty Reward"
+    'Direct credit from',
+    'Debit card refund from',
+    'Internet Banking transfer from',
+    'Deposit', // NB: not sure this is a generic reference
+    'Refund from',
+    'Business Banking Loyalty Reward'
   ];
 
   var transactionsStart = [
@@ -202,83 +217,85 @@
   var optionalDateMarker = '(?:(\\d{1,2} [a-zA-z]{3})\t)?'; // some transactions are preceded by dates such as '7 Feb' or '21 Jul'
   var amountMarker = '\t[\\d,]+\\.\\d\\d';
   var trailingBalanceMarker = '(?:[\\d,]+\\.\\d\\d)?'; // some transactions are followed by balances that can interfere a subsequent date e.g. 'Direct credit from G Kirschner Ref:-KirschnerBooking306.004,109.18' followed by '7 FebDebit card payment...'
-  var transactionSeparator = new RegExp(optionalDateMarker+'(('+paymentsMarkers+'|'+receiptsMarkers+').+?)('+amountMarker+')'+trailingBalanceMarker,'gi');
+  var transactionSeparator = new RegExp(optionalDateMarker + '((' +
+    paymentsMarkers + '|' + receiptsMarkers + ').+?)(' + amountMarker + ')' +
+    trailingBalanceMarker,'gi');
   var totalsMarkers = [
     // old format
-    new RegExp('Total payments - incl\\.\\\\ncommission & interest('+amountMarker+').+?Total receipts('+amountMarker+')'),
+    new RegExp('Total payments - incl\\.\\\\ncommission & interest(' +
+      amountMarker + ').+?Total receipts(' + amountMarker + ')'),
     // new format
     /Money out\s*?£([\d,]+\.\d\d).+?Money in\s*?£([\d,]+\.\d\d)/
   ];
-  //console.info('transaction separator',transactionSeparator);
+  // console.info('transaction separator',transactionSeparator);
 
   function processStatement(text, pageNum) {
 
     // get old format totals if this is page 1
     var totals;
-    if(pageNum===1) {
+    if (pageNum === 1) {
       totals = text.match(totalsMarkers[0]);
-      if(totals) {
+      if (totals) {
         // convert strings such as '10,271.17' to 10271.17
         totalPaymentsFromStatement = -parseFloat(totals[1].replace(',','')).toFixed(2);
         totalReceiptsFromStatement = parseFloat(totals[2].replace(',','')).toFixed(2);
       }
     }
     // get new format totals if this is page 2
-    if(pageNum===2 && !totals) {
+    if (pageNum === 2 && !totals) {
       totals = text.match(totalsMarkers[1]);
-      if(totals) {
+      if (totals) {
         // convert strings such as '10,271.17' to 10271.17
         totalPaymentsFromStatement = -parseFloat(totals[1].replace(',','')).toFixed(2);
         totalReceiptsFromStatement = parseFloat(totals[2].replace(',','')).toFixed(2);
       }
     }
     // extract statement lines
-    var startIndex,
-        loopStartIndex,
-        //endIndex = text.search(transactionsEnd),
-        matches;
+    var startIndex;
+    var loopStartIndex;
+    // var endIndex = text.search(transactionsEnd);
+    var matches;
     for (var i = transactionsStart.length - 1; i >= 0; i--) {
       loopStartIndex = text.indexOf(transactionsStart[i]);
-
-      if(loopStartIndex > -1){
+      if (loopStartIndex > -1) {
         startIndex = loopStartIndex;
       }
     }
-    if(typeof startIndex === 'undefined'){
+    if (typeof startIndex === 'undefined') {
       startIndex = -1;
     }
 
-    //if(endIndex===-1 || startIndex===-1) {
-    if(startIndex===-1) {
-      console.warn('could not find start of transactions in text, skipping page '+pageNum);
+    // if(endIndex === -1 || startIndex === -1) {
+    if (startIndex===-1) {
+      console.warn('could not find start of transactions in text, skipping page ' + pageNum);
       console.info(text);
       return;
     }
-    //newText = text.substring(startIndex+transactionsStart.length, endIndex);
-    text = text.substring(startIndex+transactionsStart.length);
+    // newText = text.substring(startIndex + transactionsStart.length, endIndex);
+    text = text.substring(startIndex + transactionsStart.length);
 
     // extract transactions
-    //console.info('**** check for argument we want ****');
+    // console.info('**** check for argument we want ****');
     matches = transactionSeparator.exec(text);
     do {
-      if(!matches) {
+      if (!matches) {
         throw new Error('no initial matches for '+text);
       }
       //console.info(matches);
-      var transactionDate = matches[1],
-          paymentOrReceiptIndicator = matches[3],
-          transactionAmount = parseFloat(matches[4].replace(',','')).toFixed(2),
-          transactionDirection = -1; // start by assuming outgoing transaction
+      var transactionDate = matches[1];
+      var paymentOrReceiptIndicator = matches[3];
+      var transactionAmount = parseFloat(matches[4].replace(',','')).toFixed(2);
+      var transactionDirection = -1; // start by assuming outgoing transaction
       // adjust sign of amount according to whether it is an incoming or outgoing transaction
-      if(receipts.indexOf(paymentOrReceiptIndicator)!==-1) {
+      if (receipts.indexOf(paymentOrReceiptIndicator) !== -1) {
         transactionDirection = 1; // it is an incoming transaction
       }
-      transactionAmount = transactionAmount*transactionDirection;
+      transactionAmount = transactionAmount * transactionDirection;
       // if transaction has a date, add the statement year and update the currently set transaction date
       // if the transaction has no date, use currently set transaction date
-      if(transactionDate) {
+      if (transactionDate) {
         //console.info('transaction date is set to',transactionDate);
-        transactionDate += ' '+statementYear;
+        transactionDate += ' ' + statementYear;
         currentTransactionDate = transactionDate;
       } else {
         transactionDate = currentTransactionDate;
@@ -293,14 +310,14 @@
         amount: transactionAmount
       });
 
-      if(transactionDirection>0) { // i.e. is an incoming transaction
+      if (transactionDirection > 0) { // i.e. is an incoming transaction
         totalReceiptsFromTransactions += transactionAmount;
       } else {
         totalPaymentsFromTransactions += transactionAmount;
       }
       matches = transactionSeparator.exec(text);
-    } while(matches);
-    //console.info('**** end of matches ****');
+    } while (matches);
+    // console.info('**** end of matches ****');
   }
 
   /*
@@ -308,11 +325,11 @@
    * Only works under node
    */
   function parsePDFPath(pdfPath, callback) {
-    if(!pdfPath) {
+    if (!pdfPath) {
       throw new Error('parsePDFStatement requires a pdfPath argument');
     }
 
-    console.log('# Starting '+pdfPath);
+    console.log('# Starting ' + pdfPath);
 
     // Loading file from file system into typed array
     var data = new Uint8Array(fs.readFileSync(pdfPath));
@@ -322,7 +339,7 @@
 
   // export the useful node method if we're in node
   // otherwise set up a window method
-  if(!isBrowser) {
+  if (!isBrowser) {
     module.exports = parsePDFPath;
   } else {
     window.parsePDFStatement = parsePDFStatement;
