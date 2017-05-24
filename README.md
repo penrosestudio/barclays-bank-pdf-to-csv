@@ -17,9 +17,6 @@ If you find an entry that is not picked up by the application, please open an is
 
 Built on [Mozilla PDF.JS](http://mozilla.github.io/pdf.js/), which is marvellous.
 
-In-browser version online at: http://penrosestudio.com/barclays-bank-pdf-to-csv/
-[Does not include 2015 update]
-
 ## Installation
 
 Clone the git repository, then install dependencies:

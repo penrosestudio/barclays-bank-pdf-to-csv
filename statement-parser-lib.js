@@ -117,7 +117,7 @@
               // add an appropriate whitespace character here if the next item is on the same line and more than 5px to the right, or is on the next line
               // item.transform[4] is the x coordinate
               // item.transform[5] is the y coordinate
-              var nextItem = content.items[i+1];
+              var nextItem = content.items[i + 1];
               var padding = '';
               var isFarAway;
               var isOnSameLine;
@@ -215,11 +215,11 @@
   var paymentsMarkers = payments.join('|');
   var receiptsMarkers = receipts.join('|');
   var optionalDateMarker = '(?:(\\d{1,2} [a-zA-z]{3})\t)?'; // some transactions are preceded by dates such as '7 Feb' or '21 Jul'
-  var amountMarker = '\t£?([\\d,]+\\.\\d\\d)';
+  var amountMarker = '(\t£?[\\d,]+\\.\\d\\d)';
   var trailingBalanceMarker = '(?:[\\d,]+\\.\\d\\d)?'; // some transactions are followed by balances that can interfere a subsequent date e.g. 'Direct credit from G Kirschner Ref:-KirschnerBooking306.004,109.18' followed by '7 FebDebit card payment...'
   var transactionSeparator = new RegExp(optionalDateMarker + '((' +
     paymentsMarkers + '|' + receiptsMarkers + ').+?)' + amountMarker +
-    trailingBalanceMarker,'gi');
+    trailingBalanceMarker, 'gi');
   var totalsMarkers = [
     // old format
     new RegExp('Total payments - incl\\.\\\\ncommission & interest' +
@@ -238,17 +238,19 @@
       totals = text.match(totalsMarkers[0]);
       if (totals) {
         // convert strings such as '10,271.17' to 10271.17
-        totalPaymentsFromStatement = -parseFloat(totals[1].replace(',','')).toFixed(2);
-        totalReceiptsFromStatement = parseFloat(totals[2].replace(',','')).toFixed(2);
+        totalPaymentsFromStatement = -parseFloat(totals[1].replace(',', '')).toFixed(2);
+        totalReceiptsFromStatement = parseFloat(totals[2].replace(',', '')).toFixed(2);
       }
     }
     // get new format totals if this is page 2
     if (pageNum === 2 && !totals) {
       totals = text.match(totalsMarkers[1]);
       if (totals) {
-        // convert strings such as '10,271.17' to 10271.17
-        totalPaymentsFromStatement = -parseFloat(totals[1].replace(',','')).toFixed(2);
-        totalReceiptsFromStatement = parseFloat(totals[2].replace(',','')).toFixed(2);
+        // convert strings such as '£10,271.17' to 10271.17
+        totalPaymentsFromStatement = -parseFloat(totals[1].replace(',','')
+        .replace('£', '')).toFixed(2);
+        totalReceiptsFromStatement = parseFloat(totals[2].replace(',','')
+        .replace('£', '')).toFixed(2);
       }
     }
     // extract statement lines
@@ -256,10 +258,12 @@
     var loopStartIndex;
     // var endIndex = text.search(transactionsEnd);
     var matches;
+    var transactionsStartLength;
     for (var i = transactionsStart.length - 1; i >= 0; i--) {
       loopStartIndex = text.indexOf(transactionsStart[i]);
       if (loopStartIndex > -1) {
         startIndex = loopStartIndex;
+        transactionsStartLength = transactionsStart[i].length;
       }
     }
     if (typeof startIndex === 'undefined') {
@@ -267,20 +271,20 @@
     }
 
     // if(endIndex === -1 || startIndex === -1) {
-    if (startIndex===-1) {
+    if (startIndex === -1) {
       console.warn('could not find start of transactions in text, skipping page ' + pageNum);
       console.info(text);
       return;
     }
     // newText = text.substring(startIndex + transactionsStart.length, endIndex);
-    text = text.substring(startIndex + transactionsStart.length);
+    text = text.substring(startIndex + transactionsStartLength);
 
     // extract transactions
     // console.info('**** check for argument we want ****');
     matches = transactionSeparator.exec(text);
     do {
       if (!matches) {
-        throw new Error('no initial matches for '+text);
+        throw new Error('no initial matches for ' + text);
       }
       //console.info(matches);
       var transactionDate = matches[1];
